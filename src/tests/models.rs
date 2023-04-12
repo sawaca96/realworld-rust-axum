@@ -18,7 +18,7 @@ fn test_execute_trade_sufficient_funds() {
         id: 1,
         user: User {
             id: 1,
-            username: "testuser".to_string(),
+            name: "testuser".to_string(),
             email: "test@example.com".to_string(),
             password: "password".to_string(),
             created_at: "2023-04-09".to_string(),
@@ -52,7 +52,7 @@ fn test_execute_trade_insufficient_funds() {
         id: 1,
         user: User {
             id: 1,
-            username: "testuser".to_string(),
+            name: "testuser".to_string(),
             email: "test@example.com".to_string(),
             password: "password".to_string(),
             created_at: "2023-04-09".to_string(),

@@ -1,32 +1,32 @@
+use rust_decimal::Decimal;
+use serde::{Deserialize, Serialize};
+use uuid::Uuid;
+
 pub mod user {
-    use serde::{Deserialize, Serialize};
+    use super::*;
 
     #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
     pub struct User {
-        pub id: u64,
-        pub username: String,
+        pub id: Uuid,
+        pub name: String,
         pub email: String,
-        pub password: String,
-        pub created_at: String,
     }
 }
 
 pub mod account {
-    use serde::{Deserialize, Serialize};
-
-    use super::trade::Trade;
+    use super::*;
 
     #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
     pub struct Account {
-        pub id: u64,
-        pub user_id: u64,
-        pub cash_balance: f64,
+        pub id: Uuid,
+        pub user_id: Uuid,
+        pub cash: Decimal,
     }
 
     impl Account {
-        pub fn execute_trade(&mut self, trade: &Trade) -> Result<(), &'static str> {
+        pub fn execute_trade(&mut self, trade: &trade::Trade) -> Result<(), &'static str> {
             // Check if the user has sufficient funds
-            if self.cash_balance < trade.total_cost() {
+            if self.cash < trade.total_cost() {
                 return Err("Insufficient funds");
             }
 
@@ -37,7 +37,7 @@ pub mod account {
             // ...
 
             // Update the account's cash_balance
-            self.cash_balance -= trade.total_cost();
+            self.cash -= trade.total_cost();
 
             // Unlock the account instance
             // ...
@@ -46,115 +46,65 @@ pub mod account {
         }
     }
 }
+
 pub mod crypto {
-    use serde::{Deserialize, Serialize};
+    use super::*;
 
     #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
     pub struct Crypto {
         pub id: u64,
         pub name: String,
         pub symbol: String,
-        pub price_usd: f64,
     }
 }
 
-pub mod portfolio {
-    use serde::{Deserialize, Serialize};
+pub mod position {
+    use super::*;
 
     #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-    pub struct Portfolio {
-        pub id: u64,
-        pub user_id: u64,
-        pub holdings: Vec<Holding>,
-    }
-
-    #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-    pub struct Holding {
+    pub struct Position {
+        pub account_id: Uuid,
         pub crypto_id: u64,
-        pub quantity: f64,
-    }
-
-    impl Portfolio {
-        pub fn add_holding(&mut self, crypto_id: u64, quantity: f64) {
-            self.holdings.push(Holding {
-                crypto_id,
-                quantity,
-            });
-        }
-
-        pub fn update_holding(
-            &mut self,
-            crypto_id: u64,
-            new_quantity: f64,
-        ) -> Result<(), &'static str> {
-            let holding = self.holdings.iter_mut().find(|h| h.crypto_id == crypto_id);
-
-            match holding {
-                Some(h) => {
-                    h.quantity = new_quantity;
-                    Ok(())
-                }
-                None => Err("Holding not found"),
-            }
-        }
-
-        pub fn remove_holding(&mut self, crypto_id: u64) -> Result<(), &'static str> {
-            let index = self.holdings.iter().position(|h| h.crypto_id == crypto_id);
-
-            match index {
-                Some(i) => {
-                    self.holdings.remove(i);
-                    Ok(())
-                }
-                None => Err("Holding not found"),
-            }
-        }
+        pub quantity: Decimal,
+        pub buy_price: Decimal,
+        pub purchase: Decimal,
+        pub created_at: u64,
     }
 }
 
 pub mod trade {
-    use serde::{Deserialize, Serialize};
-
-    use crate::domain::models::{crypto::Crypto, user::User};
-
-    #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-    pub enum TradeType {
-        Buy,
-        Sell,
-    }
+    use super::*;
 
     #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
     pub struct Trade {
         pub id: u64,
-        pub user: User,
-        pub trade_type: TradeType,
-        pub crypto: Crypto,
-        pub quantity: f64,
-        pub price: f64,
+        pub user: user::User,
+        pub order_id: Uuid,
+        pub crypto: crypto::Crypto,
+        pub quantity: Decimal,
+        pub price: Decimal,
         pub executed: bool,
-        pub execution_date: Option<String>,
+        pub executed_at: u64,
     }
 
     impl Trade {
-        pub fn total_cost(&self) -> f64 {
+        pub fn total_cost(&self) -> Decimal {
             self.quantity * self.price
         }
     }
 }
 
 pub mod order {
-    use serde::{Deserialize, Serialize};
-
-    use crate::domain::models::{crypto::Crypto, user::User};
+    use super::*;
 
     #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-    pub enum OrderType {
+    pub enum TradeAction {
         Buy,
         Sell,
     }
 
     #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-    pub enum OrderExecutionType {
+    pub enum OrderType {
         Market,
         Limit,
     }
@@ -162,12 +112,14 @@ pub mod order {
     #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
     pub struct Order {
         pub id: u64,
-        pub user: User,
+        pub user: user::User,
+        pub account_id: Uuid,
         pub order_type: OrderType,
-        pub execution_type: OrderExecutionType,
-        pub crypto: Crypto,
-        pub quantity: f64,
-        pub price: f64,
-        pub order_date: String,
+        pub trade_action: TradeAction,
+        pub crypto_id: Uuid,
+        pub quantity: Decimal,
+        pub unfilled: Decimal,
+        pub price: Decimal,
+        pub created_at: u64,
     }
 }
