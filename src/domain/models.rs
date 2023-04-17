@@ -7,7 +7,17 @@ use uuid::Uuid;
 pub mod user {
     use super::*;
 
-    #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Queryable, Identifiable)]
+    #[derive(
+        Debug,
+        Clone,
+        PartialEq,
+        Serialize,
+        Deserialize,
+        Queryable,
+        Identifiable,
+        Insertable,
+        AsChangeset,
+    )]
     pub struct User {
         pub id: Uuid,
         pub nickname: String,
