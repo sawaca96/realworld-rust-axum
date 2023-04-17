@@ -50,6 +50,7 @@ fn account_reserve_cash() {
 #[test]
 fn position_can_sell() {
     let position = position::Position {
+        id: Uuid::new_v4(),
         account_id: Uuid::new_v4(),
         crypto: get_test_crypto(),
         quantity: dec!(10.00),
@@ -66,6 +67,7 @@ fn position_can_sell() {
 #[test]
 fn position_reserve_for_sell() {
     let mut position = position::Position {
+        id: Uuid::new_v4(),
         account_id: Uuid::new_v4(),
         crypto: get_test_crypto(),
         quantity: dec!(10.00),
@@ -82,6 +84,7 @@ fn position_reserve_for_sell() {
 #[test]
 fn position_update_position() {
     let mut position = position::Position {
+        id: Uuid::new_v4(),
         account_id: Uuid::new_v4(),
         crypto: get_test_crypto(),
         quantity: dec!(10.00),

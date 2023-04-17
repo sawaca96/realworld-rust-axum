@@ -1,3 +1,5 @@
+use crate::schema::*;
+use diesel::prelude::*;
 use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
@@ -5,7 +7,7 @@ use uuid::Uuid;
 pub mod user {
     use super::*;
 
-    #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+    #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Queryable, Identifiable)]
     pub struct User {
         pub id: Uuid,
         pub nickname: String,
@@ -16,7 +18,7 @@ pub mod user {
 pub mod account {
     use super::*;
 
-    #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+    #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Queryable, Identifiable)]
     pub struct Account {
         pub id: Uuid,
         pub user: user::User,
@@ -37,7 +39,7 @@ pub mod account {
 pub mod crypto {
     use super::*;
 
-    #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+    #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Queryable, Identifiable)]
     pub struct Crypto {
         pub id: u64,
         pub name: String,
@@ -48,8 +50,9 @@ pub mod crypto {
 pub mod position {
     use super::*;
 
-    #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+    #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Queryable, Identifiable)]
     pub struct Position {
+        pub id: Uuid,
         pub account_id: Uuid,
         pub crypto: crypto::Crypto,
         pub quantity: Decimal,
@@ -88,7 +91,7 @@ pub mod trade {
         Sell,
     }
 
-    #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+    #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Queryable, Identifiable)]
     pub struct Trade {
         pub id: u64,
         pub user: user::User,
@@ -122,7 +125,7 @@ pub mod order {
         Limit,
     }
 
-    #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+    #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Queryable, Identifiable)]
     pub struct Order {
         pub id: u64,
         pub user: user::User,

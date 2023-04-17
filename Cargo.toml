@@ -7,6 +7,8 @@ edition = "2021"
 
 [dependencies]
 axum = "0.6.12"
+diesel = { version = "2.0.3", features = ["uuid", "postgres"] }
+dotenvy = "0.15.7"
 rust_decimal = "1.29.1"
 rust_decimal_macros = "1.29.1"
 serde = { version = "1.0.159", features = ["derive"] }
