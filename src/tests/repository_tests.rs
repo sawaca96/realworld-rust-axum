@@ -1,6 +1,6 @@
+use crate::domain::interfaces::user_repository::UserRepository;
 use crate::domain::models::user::User;
-use crate::domain::repositories::UserRepository;
-use crate::infrastructure::adapters::repository_impl::UserRepositoryImpl;
+use crate::infrastructure::repositories::user_repository::UserRepositoryImpl;
 use crate::test_utils::get_test_db_connection;
 use uuid::Uuid;
 

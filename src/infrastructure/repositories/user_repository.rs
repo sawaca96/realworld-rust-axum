@@ -1,5 +1,5 @@
+use crate::domain::interfaces::user_repository::UserRepository;
 use crate::domain::models::user::User;
-use crate::domain::repositories::UserRepository;
 use crate::infrastructure::database::db_connection::PgPooledConnection;
 use crate::schema::users;
 use diesel::prelude::*;
