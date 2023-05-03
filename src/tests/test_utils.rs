@@ -1,5 +1,3 @@
-// src/test_utils.rs
-
 use crate::infrastructure::database::db_connection::{create_pg_pool, PgPooledConnection};
 use dotenvy::dotenv;
 use std::env;

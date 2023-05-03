@@ -18,4 +18,5 @@ pub struct User {
     pub id: Uuid,
     pub nickname: String,
     pub email: String,
+    pub password: String,
 }

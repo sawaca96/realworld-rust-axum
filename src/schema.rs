@@ -61,6 +61,7 @@ diesel::table! {
         id -> Uuid,
         nickname -> Varchar,
         email -> Varchar,
+        password -> Varchar,
     }
 }
 
