@@ -1,6 +1,6 @@
 use crate::{
     application::services::user_service::UserService,
-    infrastructure::database::db_connection::{create_pg_pool, get_pg_pool},
+    infrastructure::database::db_connection::{create_pg_pool, get_pg_connection},
 };
 use axum::{http, response::IntoResponse, Json};
 use serde::{Deserialize, Serialize};
@@ -26,9 +26,8 @@ pub struct SigninOutput {
 pub async fn signup(Json(payload): Json<SignupInput>) -> impl IntoResponse {
     let database_url = std::env::var("DATABASE_URL").expect("DATABASE_URL must be set");
     let pool = create_pg_pool(&database_url);
-    let mut conn = get_pg_pool(&pool);
-    let jwt_secret = std::env::var("JWT_SECRET").expect("JWT_SECRET must be set");
-    let mut user_service = UserService::new(&mut conn, &jwt_secret);
+    let conn = get_pg_connection(&pool);
+    let mut user_service = UserService::new(conn);
 
     match user_service.signup(payload.email, payload.nickname, payload.password) {
         Ok(user) => (
@@ -45,9 +44,8 @@ pub async fn signup(Json(payload): Json<SignupInput>) -> impl IntoResponse {
 pub async fn signin(Json(payload): Json<SigninInput>) -> impl IntoResponse {
     let database_url = std::env::var("DATABASE_URL").expect("DATABASE_URL must be set");
     let pool = create_pg_pool(&database_url);
-    let mut conn = get_pg_pool(&pool);
-    let jwt_secret = std::env::var("JWT_SECRET").expect("JWT_SECRET must be set");
-    let mut user_service = UserService::new(&mut conn, &jwt_secret);
+    let conn = get_pg_connection(&pool);
+    let mut user_service = UserService::new(conn);
 
     match user_service.signin(payload.email, payload.password) {
         Ok(token) => (http::StatusCode::OK, Ok(Json(SigninOutput { token }))),

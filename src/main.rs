@@ -10,7 +10,7 @@ mod tests {
 
 use std::net::SocketAddr;
 
-use crate::presentation::controllers::restapi_controller::{signin, signup};
+use crate::presentation::restapi::user_routers::{signin, signup};
 use axum::routing::{get, post};
 use dotenvy::dotenv;
 

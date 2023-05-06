@@ -1,7 +1,7 @@
 use axum::{http::StatusCode, routing::post};
 use axum_test_helper::TestClient;
 
-use crate::presentation::controllers::restapi_controller::{signin, signup};
+use crate::presentation::restapi::user_routers::{signin, signup};
 
 #[tokio::test]
 async fn test_signin() {

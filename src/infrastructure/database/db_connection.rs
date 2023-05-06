@@ -11,7 +11,7 @@ pub fn create_pg_pool(database_url: &str) -> PgPool {
         .expect("Failed to create database connection pool")
 }
 
-pub fn get_pg_pool(pool: &PgPool) -> PgPooledConnection {
+pub fn get_pg_connection(pool: &PgPool) -> PgPooledConnection {
     pool.get()
         .expect("Failed to get database connection from pool")
 }

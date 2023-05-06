@@ -1,12 +1,10 @@
+use crate::application::utils::auth::encode_jwt;
 use crate::domain::interfaces::user_repository::IUserRepository;
 use crate::domain::models::user::User;
+use crate::infrastructure::database::db_connection::PgPooledConnection;
 use crate::infrastructure::repositories::user_repository::UserRepository;
 use argon2::{self, Config};
-use diesel::prelude::*;
-use jsonwebtoken::errors::Result as JWTResult;
-use jsonwebtoken::{encode, EncodingKey, Header};
 use serde::{Deserialize, Serialize};
-use std::time::{SystemTime, UNIX_EPOCH};
 use uuid::Uuid;
 
 use diesel::result::Error as DieselError;
@@ -49,38 +47,17 @@ struct Claims {
     exp: usize,
 }
 
-pub struct UserService<'a> {
-    user_repository: UserRepository<'a>,
-    jwt_secret: &'a str,
-    argon2_config: Config<'a>,
+pub struct UserService {
+    user_repository: UserRepository,
+    argon2_config: Config<'static>,
 }
 
-impl<'a> UserService<'a> {
-    pub fn new(conn: &'a mut PgConnection, jwt_secret: &'a str) -> Self {
+impl UserService {
+    pub fn new(conn: PgPooledConnection) -> Self {
         UserService {
             user_repository: UserRepository::new(conn),
-            jwt_secret,
             argon2_config: Config::default(),
         }
-    }
-
-    fn generate_jwt(&self, user_id: Uuid) -> JWTResult<String> {
-        let now = SystemTime::now()
-            .duration_since(UNIX_EPOCH)
-            .unwrap()
-            .as_secs() as usize;
-        let claims = Claims {
-            sub: user_id.to_string(),
-            exp: now + 86400, // 1 day
-        };
-
-        let token = encode(
-            &Header::default(),
-            &claims,
-            &EncodingKey::from_secret(self.jwt_secret.as_ref()),
-        )?;
-
-        Ok(token)
     }
 
     fn hash_password(&self, password: &str) -> Result<String, argon2::Error> {
@@ -93,6 +70,7 @@ impl<'a> UserService<'a> {
         let valid = argon2::verify_encoded(hash, password.as_bytes())?;
         Ok(valid)
     }
+
     pub fn signup(
         &mut self,
         email: String,
@@ -114,7 +92,7 @@ impl<'a> UserService<'a> {
         let user = self.user_repository.find_by_email(&email)?;
 
         if self.verify_password(&user.password, &password).unwrap() {
-            let token = self.generate_jwt(user.id)?;
+            let token = encode_jwt(user)?;
             Ok(token)
         } else {
             Err(UserServiceError::InvalidCredentials)
