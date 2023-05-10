@@ -1,34 +1,34 @@
-use std::borrow::BorrowMut;
-
 use crate::domain::interfaces::user_repository::IUserRepository;
 use crate::domain::models::user::User;
-use crate::infrastructure::database::db_connection::PgPooledConnection;
+use crate::infrastructure::database::db_connection::PgConnection;
+use crate::schema::users;
+use async_trait::async_trait;
 use diesel::prelude::*;
+use diesel_async::RunQueryDsl;
 
 pub struct UserRepository {
-    conn: PgPooledConnection,
+    conn: PgConnection,
 }
 
 impl UserRepository {
-    pub fn new(conn: PgPooledConnection) -> Self {
+    pub fn new(conn: PgConnection) -> Self {
         UserRepository { conn }
     }
 }
 
+#[async_trait]
 impl IUserRepository for UserRepository {
-    fn find_by_email(&mut self, user_email: &str) -> QueryResult<User> {
-        use crate::schema::users::dsl::*;
-
-        users
-            .filter(email.eq(user_email))
-            .first(self.conn.borrow_mut())
+    async fn find_by_email(&mut self, email: &str) -> QueryResult<User> {
+        users::table
+            .filter(users::email.eq(email))
+            .get_result(&mut self.conn)
+            .await
     }
 
-    fn create(&mut self, new_user: &User) -> QueryResult<User> {
-        use crate::schema::users::dsl::*;
-
-        diesel::insert_into(users)
-            .values(new_user)
-            .get_result(self.conn.borrow_mut())
+    async fn create(&mut self, user: &User) -> QueryResult<User> {
+        diesel::insert_into(users::table)
+            .values(user)
+            .get_result(&mut self.conn)
+            .await
     }
 }

@@ -1,19 +1,28 @@
-use crate::application::services::user_service::UserService;
 use crate::application::utils::auth::decode_jwt;
+use crate::application::utils::response::internal_error;
 use crate::domain::models::user::Me;
-use crate::infrastructure::database::db_connection::{
-    create_pg_pool, get_pg_connection, PgPooledConnection,
-};
+use crate::infrastructure::database::db_connection::{PgConnection, PgPool};
+use axum::async_trait;
+use axum::extract::{FromRef, FromRequestParts};
+use axum::http::{request::Parts, StatusCode};
 
-fn db_connection() -> PgPooledConnection {
-    let database_url = std::env::var("DATABASE_URL").expect("DATABASE_URL must be set");
-    let pool = create_pg_pool(&database_url);
-    get_pg_connection(&pool)
-}
+pub struct DatabaseConnection(pub PgConnection);
 
-fn user_service() -> UserService {
-    let jwt_secret = std::env::var("JWT_SECRET").expect("JWT_SECRET must be set");
-    UserService::new(db_connection())
+#[async_trait]
+impl<S> FromRequestParts<S> for DatabaseConnection
+where
+    S: Send + Sync,
+    PgPool: FromRef<S>,
+{
+    type Rejection = (StatusCode, String);
+
+    async fn from_request_parts(_parts: &mut Parts, state: &S) -> Result<Self, Self::Rejection> {
+        let pool = PgPool::from_ref(state);
+
+        let conn = pool.get_owned().await.map_err(internal_error)?;
+
+        Ok(Self(conn))
+    }
 }
 
 fn current_user(token: &str) -> Me {

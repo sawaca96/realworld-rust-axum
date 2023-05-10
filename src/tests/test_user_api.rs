@@ -1,15 +1,12 @@
-use axum::{http::StatusCode, routing::post};
+use crate::create_app;
+use axum::http::StatusCode;
 use axum_test_helper::TestClient;
-
-use crate::presentation::restapi::user_routers::{signin, signup};
 
 #[tokio::test]
 async fn test_signin() {
     dotenvy::dotenv().ok();
-    let router = axum::Router::new()
-        .route("/signup", post(signup))
-        .route("/signin", post(signin));
-    let client = TestClient::new(router);
+    let app = create_app().await;
+    let client = TestClient::new(app);
 
     let input = serde_json::json!({
         "email": "user@test.co.kr",

@@ -43,7 +43,7 @@ pub fn decode_jwt(token: &str) -> Result<Me, String> {
     );
     match token_data {
         Ok(token_data) => {
-            let mut user = Me {
+            let user = Me {
                 id: token_data.claims.user_id,
                 nickname: token_data.claims.nickname,
                 email: token_data.claims.email,

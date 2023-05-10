@@ -1,8 +1,9 @@
-use crate::application::utils::auth::encode_jwt;
 use crate::domain::interfaces::user_repository::IUserRepository;
 use crate::domain::models::user::User;
-use crate::infrastructure::database::db_connection::PgPooledConnection;
 use crate::infrastructure::repositories::user_repository::UserRepository;
+use crate::{
+    application::utils::auth::encode_jwt, infrastructure::database::db_connection::PgConnection,
+};
 use argon2::{self, Config};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
@@ -53,7 +54,7 @@ pub struct UserService {
 }
 
 impl UserService {
-    pub fn new(conn: PgPooledConnection) -> Self {
+    pub async fn new(conn: PgConnection) -> Self {
         UserService {
             user_repository: UserRepository::new(conn),
             argon2_config: Config::default(),
@@ -71,7 +72,7 @@ impl UserService {
         Ok(valid)
     }
 
-    pub fn signup(
+    pub async fn signup(
         &mut self,
         email: String,
         nickname: String,
@@ -85,11 +86,15 @@ impl UserService {
             password: hashed_password,
         };
 
-        self.user_repository.create(&new_user)
+        self.user_repository.create(&new_user).await
     }
 
-    pub fn signin(&mut self, email: String, password: String) -> Result<String, UserServiceError> {
-        let user = self.user_repository.find_by_email(&email)?;
+    pub async fn signin(
+        &mut self,
+        email: String,
+        password: String,
+    ) -> Result<String, UserServiceError> {
+        let user = self.user_repository.find_by_email(&email).await?;
 
         if self.verify_password(&user.password, &password).unwrap() {
             let token = encode_jwt(user)?;
