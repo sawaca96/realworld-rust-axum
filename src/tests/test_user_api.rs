@@ -1,7 +1,12 @@
 use crate::create_app;
 use axum::http::StatusCode;
 use axum_test_helper::TestClient;
+use serde::Deserialize;
 
+#[derive(Debug, Deserialize)]
+struct SigninResponse {
+    token: String,
+}
 #[tokio::test]
 async fn test_signin() {
     dotenvy::dotenv().ok();
@@ -21,5 +26,16 @@ async fn test_signin() {
         "password": "passwordr"
     });
     let res = client.post("/signin").json(&input).send().await;
+    assert_eq!(res.status(), StatusCode::OK);
+
+    let signin_response = res.json::<SigninResponse>().await;
+    let res = client
+        .get("/me")
+        .header(
+            "Authorization",
+            "Bearer ".to_string() + &signin_response.token,
+        )
+        .send()
+        .await;
     assert_eq!(res.status(), StatusCode::OK);
 }

@@ -17,12 +17,23 @@ use axum::{
 };
 use dotenvy::dotenv;
 use infrastructure::database::db_connection::create_pg_pool;
+use presentation::restapi::user_routers::me;
+use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
 #[tokio::main]
 async fn main() {
     dotenv().ok();
+    tracing_subscriber::registry()
+        .with(
+            tracing_subscriber::EnvFilter::try_from_default_env()
+                .unwrap_or_else(|_| "example_diesel_async_postgres=debug".into()),
+        )
+        .with(tracing_subscriber::fmt::layer())
+        .init();
+
     let app = create_app().await;
     let addr = SocketAddr::from(([127, 0, 0, 1], 3000));
+    tracing::debug!("listening on {}", addr);
     axum::Server::bind(&addr)
         .serve(app.into_make_service())
         .await
@@ -37,6 +48,7 @@ async fn create_app() -> Router {
         .route("/ping", get(ping))
         .route("/signup", post(signup))
         .route("/signin", post(signin))
+        .route("/me", get(me))
         .with_state(pool)
 }
 

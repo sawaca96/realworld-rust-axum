@@ -1,11 +1,10 @@
 use crate::domain::interfaces::user_repository::IUserRepository;
-use crate::domain::models::user::User;
+use crate::domain::models::user::{Me, User};
 use crate::infrastructure::repositories::user_repository::UserRepository;
 use crate::{
     application::utils::auth::encode_jwt, infrastructure::database::db_connection::PgConnection,
 };
 use argon2::{self, Config};
-use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 use diesel::result::Error as DieselError;
@@ -41,11 +40,6 @@ impl From<JWTError> for UserServiceError {
     fn from(err: JWTError) -> UserServiceError {
         UserServiceError::JWT(err)
     }
-}
-#[derive(Debug, Serialize, Deserialize)]
-struct Claims {
-    sub: String,
-    exp: usize,
 }
 
 pub struct UserService {
@@ -94,7 +88,7 @@ impl UserService {
         email: String,
         password: String,
     ) -> Result<String, UserServiceError> {
-        let user = self.user_repository.find_by_email(&email).await?;
+        let user = self.user_repository.get_user_by_email(&email).await?;
 
         if self.verify_password(&user.password, &password).unwrap() {
             let token = encode_jwt(user)?;
@@ -102,5 +96,9 @@ impl UserService {
         } else {
             Err(UserServiceError::InvalidCredentials)
         }
+    }
+
+    pub async fn get_me(&mut self, id: &Uuid) -> Result<Me, diesel::result::Error> {
+        self.user_repository.get_me(id).await
     }
 }

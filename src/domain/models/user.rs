@@ -11,8 +11,7 @@ pub struct User {
     pub password: String,
 }
 
-// TODO: 패스워드가 없는 모델 사용
-#[derive(Serialize)]
+#[derive(Debug, Serialize)]
 pub struct Me {
     pub id: Uuid,
     pub nickname: String,
