@@ -1,8 +1,7 @@
 use crate::application::services::user_service::UserService;
+use crate::presentation::extractors::{CurrentUser, DatabaseConnection};
 use axum::{http, response::IntoResponse, Json};
 use serde::{Deserialize, Serialize};
-
-use super::super::extractors::{CurrentUser, DatabaseConnection};
 
 #[derive(Serialize, Deserialize)]
 pub struct SignupInput {

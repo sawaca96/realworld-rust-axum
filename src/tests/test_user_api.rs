@@ -1,7 +1,28 @@
+use std::error::Error;
+
 use crate::create_app;
+use crate::schema::users::dsl;
 use axum::http::StatusCode;
 use axum_test_helper::TestClient;
+use diesel::pg::PgConnection;
+use diesel::prelude::*;
+use diesel_migrations::{embed_migrations, EmbeddedMigrations, MigrationHarness};
 use serde::Deserialize;
+
+pub fn establish_connection() -> PgConnection {
+    dotenvy::dotenv().ok();
+    let database_url = std::env::var("DATABASE_URL").expect("DATABASE_URL must be set");
+    PgConnection::establish(&database_url).unwrap()
+}
+
+fn run_migrations(
+    connection: &mut PgConnection,
+) -> Result<(), Box<dyn Error + Send + Sync + 'static>> {
+    pub const MIGRATIONS: EmbeddedMigrations = embed_migrations!("./migrations");
+    connection.run_pending_migrations(MIGRATIONS)?;
+
+    Ok(())
+}
 
 #[derive(Debug, Deserialize)]
 struct SigninResponse {
@@ -12,6 +33,8 @@ async fn test_signin() {
     dotenvy::dotenv().ok();
     let app = create_app().await;
     let client = TestClient::new(app);
+    let mut connection = establish_connection();
+    run_migrations(&mut connection).unwrap();
 
     let input = serde_json::json!({
         "email": "user@test.co.kr",
@@ -38,4 +61,6 @@ async fn test_signin() {
         .send()
         .await;
     assert_eq!(res.status(), StatusCode::OK);
+
+    diesel::delete(dsl::users).execute(&mut connection).unwrap();
 }
