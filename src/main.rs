@@ -10,14 +10,14 @@ mod tests {
 
 use std::net::SocketAddr;
 
-use crate::presentation::restapi::user_routers::{signin, signup};
+use crate::presentation::routers::user_routers::{signin, signup};
 use axum::{
     routing::{get, post},
     Router,
 };
 use dotenvy::dotenv;
 use infrastructure::database::db_connection::create_pg_pool;
-use presentation::restapi::user_routers::me;
+use presentation::routers::user_routers::me;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
 #[tokio::main]
